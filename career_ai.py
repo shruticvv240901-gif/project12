@@ -1,103 +1,73 @@
-import pandas as pd
-import numpy as np
-import joblib
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+import requests
 
-# ------------------------------
-# 1. Load Dataset
-# ------------------------------
-data = pd.read_csv("career_dataset.csv")
+def check_internet():
+    try:
+        requests.get("https://www.google.com", timeout=5)
+        return True
+    except:
+        return False
 
-# Encode categorical columns
-label_encoders = {}
-for col in data.columns:
-    if data[col].dtype == 'object':
-        le = LabelEncoder()
-        data[col] = le.fit_transform(data[col])
-        label_encoders[col] = le
 
-# Features and target
-X = data.drop("Career", axis=1)
-y = data["Career"]
+def get_user_data():
+    name = input("Enter your name: ")
+    interests = input("Enter your interests (comma separated): ")
+    skills = input("Enter your skills (comma separated): ")
+    subjects = input("Enter your subjects (comma separated): ")
 
-# ------------------------------
-# 2. Train ML Model
-# ------------------------------
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+    query = interests + " " + skills + " " + subjects
+    return name, query
 
-model = RandomForestClassifier(n_estimators=100)
-model.fit(X_train, y_train)
 
-# Save model
-joblib.dump(model, "model.pkl")
-print("Model trained and saved successfully!")
+def search_jobs(query):
+    print("\nSearching real job data from internet...\n")
 
-# ------------------------------
-# 3. Career Skill Database
-# ------------------------------
-career_skills = {
-    "Data Scientist": ["Python", "Statistics", "Machine Learning"],
-    "Software Engineer": ["Programming", "DSA", "Problem Solving"],
-    "Business Analyst": ["Excel", "SQL", "Communication"],
-    "UI Designer": ["Creativity", "Design", "UX"]
-}
+    url = "https://jsearch.p.rapidapi.com/search"
 
-# ------------------------------
-# 4. Roadmap Database
-# ------------------------------
-roadmap = {
-    "Data Scientist": ["Python Basics", "Data Analysis", "Machine Learning Projects"],
-    "Software Engineer": ["DSA Practice", "Build Projects", "System Design"],
-    "Business Analyst": ["Excel", "SQL", "Business Case Studies"],
-    "UI Designer": ["Figma", "UX Research", "Portfolio"]
-}
+    headers = {
+        "X-RapidAPI-Key": "YOUR_API_KEY",  # Replace with your key
+        "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
+    }
 
-# ------------------------------
-# 5. User Input
-# ------------------------------
-print("\n==== AI Career Guidance Tool ====")
+    params = {
+        "query": query,
+        "num_pages": "1"
+    }
 
-user_input = {}
+    response = requests.get(url, headers=headers, params=params)
 
-for col in X.columns:
-    val = input(f"Enter {col}: ")
-    user_input[col] = val
+    if response.status_code == 200:
+        data = response.json()
+        return data["data"]
+    else:
+        print("Error fetching job data")
+        return []
 
-user_df = pd.DataFrame([user_input])
 
-# Encode user input
-for col in user_df.columns:
-    if col in label_encoders:
-        user_df[col] = label_encoders[col].transform(user_df[col])
+def show_results(name, jobs):
+    print(f"\nHi {name}! Based on your profile, here are career options:\n")
 
-# ------------------------------
-# 6. Prediction
-# ------------------------------
-prediction = model.predict(user_df)[0]
-confidence = np.max(model.predict_proba(user_df)) * 100
+    if not jobs:
+        print("No jobs found. Try different skills.")
+        return
 
-# Decode career
-career_name = label_encoders["Career"].inverse_transform([prediction])[0]
+    shown = set()
 
-print("\nRecommended Career:", career_name)
-print("Confidence Score: {:.2f}%".format(confidence))
+    for job in jobs[:10]:
+        title = job.get("job_title", "Unknown")
+        company = job.get("employer_name", "Unknown")
 
-# ------------------------------
-# 7. Skill Gap Analysis
-# ------------------------------
-print("\nSkill Gap Analysis:")
-for skill in career_skills.get(career_name, []):
-    print("-", skill)
+        if title not in shown:
+            print(f"• {title} at {company}")
+            shown.add(title)
 
-# ------------------------------
-# 8. Learning Roadmap
-# ------------------------------
-print("\nLearning Roadmap:")
-for step in roadmap.get(career_name, []):
-    print("-", step)
 
-print("\nThank you for using CareerAI!")
+# Main program
+if __name__ == "__main__":
+    print("=== AI Career Recommendation Tool ===")
+
+    if not check_internet():
+        print("No internet connection.")
+    else:
+        name, query = get_user_data()
+        jobs = search_jobs(query)
+        show_results(name, jobs)
