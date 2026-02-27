@@ -1,3 +1,1 @@
-Here is a **350-character description**:
-
 This project develops an AI-based career guidance system that analyzes student skills, interests, and academic performance to recommend suitable career paths. It performs skill gap analysis, provides confidence scores, and generates personalized learning roadmaps to help users make informed, data-driven career decisions.
