@@ -1,2 +1,3 @@
-# project12
-This project simulates the Demand Paging technique in virtual memory using Python. It takes a page reference string and frame size as input, loads pages only when required, handles page faults, replaces pages when memory is full, and displays memory status. It helps in understanding paging and efficient memory management.
+Here is a **350-character description**:
+
+This project develops an AI-based career guidance system that analyzes student skills, interests, and academic performance to recommend suitable career paths. It performs skill gap analysis, provides confidence scores, and generates personalized learning roadmaps to help users make informed, data-driven career decisions.
